@@ -14,6 +14,9 @@ class FAI:
         self.CODE_P1 = '1'
         self.CODE_P2 = '2'
         self.CODE_BLANK = ' '
+        # self.CODE_P1 = '●'
+        # self.CODE_P2 = '○'
+        # self.CODE_BLANK = '.'
         self.CODE = {0: self.CODE_BLANK, 1: self.CODE_P1, 2: self.CODE_P2}
         self.w = w
         self.h = h
@@ -25,17 +28,7 @@ class FAI:
 
         # 定义计算权值的时候用的
 
-        # self.weights = {
-        #     str([0, 1, 0])[1:-1]: 1,
-        #     str([0, 1, 1, 0])[1:-1]: 2,
-        #     str([0, 1, 1, 1, 0])[1:-1]: 3,
-        #     str([0, 1, 1, 1, 1, 0])[1:-1]: 3,
-        #     str([0, 1, 2])[1:-1]: 0,
-        #     str([0, 1, 1, 2])[1:-1]: 1,
-        #     str([0, 1, 1, 1, 2])[1:-1]: 2,
-        #     str([0, 1, 1, 1, 1, 2])[1:-1]: 3,
-        # }
-        self.weights =  {
+        self.weights = {
             self.P1: {
                 " 1 ": 1,
                 " 11 ": 2,
@@ -59,13 +52,13 @@ class FAI:
         }
 
     def __str__(self):
-        res = self.CODE_BLANK * self.w + '\n'
+        res = self.CODE_BLANK * self.w + self.CODE_BLANK * 2 + '\n'
         for y in self.map:
             res = res + self.CODE_BLANK
             for x in y:
                 res = res + self.CODE[x]
             res = res + self.CODE_BLANK + '\n'
-        res = res + self.CODE_BLANK * self.w
+        res = res + self.CODE_BLANK * self.w + self.CODE_BLANK * 2
         return res
 
     def put(self, x: int, y: int, val: int):
@@ -118,7 +111,7 @@ class FAI:
             for yi in range(len(self.map)):
                 if i + yi < self.w:
                     x.append(self.map[yi][i + yi])
-            # 十分低效率的检查方式*2
+            # 十分低效率的检查方式*3
             if player not in x:
                 continue
             for j in range(len(x)):
@@ -136,7 +129,7 @@ class FAI:
             for xi in range(self.w):
                 if i + xi < self.h:
                     x.append(self.map[i][i + xi])
-            # 十分低效率的检查方式*2
+            # 十分低效率的检查方式*4
             if player not in x:
                 continue
             for j in range(len(x)):
@@ -154,7 +147,7 @@ class FAI:
             for yi in range(len(self.map)):
                 if 0 <= i - yi < self.w:
                     x.append(self.map[yi][i - yi])
-            # 十分低效率的检查方式*2
+            # 十分低效率的检查方式*5
             if player not in x:
                 continue
             for j in range(len(x)):
@@ -172,7 +165,7 @@ class FAI:
             for xi in range(self.w):
                 if 0 <= i - xi < self.h:
                     x.append(self.map[i][i - xi])
-            # 十分低效率的检查方式*2
+            # 十分低效率的检查方式*6
             if player not in x:
                 continue
             for j in range(len(x)):
@@ -190,30 +183,87 @@ class FAI:
         weights = [[0 for i in range(self.w)] for i in range(self.h)]
         maps = self.__str__().split('\n')
 
-        for iy in range(len(maps)):
-            # 检查横向，从左到右
-            y = maps[iy]
-            for ix in range(len(y)):
-                for k in self.weights[player]:
-                    if y[ix:].startswith(k):
-                        weights[iy][ix] = self.weights[player][k]
-            # 检查横向，从右到左
-            y = maps[iy][::-1]
-            for ix in range(len(y)):
-                for k in self.weights[player]:
-                    if y[ix:].startswith(k):
-                        weights[iy][ix] = self.weights[player][k]
+        # for iy in range(len(maps)):
+        #     # 检查横向，从左到右
+        #     y = maps[iy]
+        #     for ix in range(len(y)):
+        #         for k in self.weights[player]:
+        #             if y[ix:].startswith(k):
+        #                 weights[iy - 1][ix + 1] = weights[iy - 1][ix + 1] + self.weights[player][k]
+        #     # 检查横向，从右到左
+        #     y = maps[iy][::-1]
+        #     for ix in range(len(y)):
+        #         for k in self.weights[player]:
+        #             if y[ix:].startswith(k):
+        #                 weights[iy - 1][self.w - (ix + 2)] = weights[iy - 1][self.w - (ix + 2)] + self.weights[player][k]
+        #
+        # for ix in range(len(maps[0])):
+        #     y = ''
+        #     for iy in range(len(maps)):
+        #         y = y + maps[iy][ix]
+        #
+        #     # 检查竖向，从上到下
+        #     for iy in range(len(y)):
+        #         for k in self.weights[player]:
+        #             if y[iy:].startswith(k):
+        #                 weights[iy - 1][ix - 1] = weights[iy - 1][ix - 1] + self.weights[player][k]
+        #
+        #     y = y[::-1]
+        #     # 检查竖向，从下到上
+        #     for iy in range(len(y)):
+        #         for k in self.weights[player]:
+        #             if y[iy:].startswith(k):
+        #                 weights[self.h - (iy - 0)][ix - 1] = weights[self.h - (iy - 0)][ix - 1] + self.weights[player][k]
 
-        # 检查竖向，从上到下
-        for ix in range(len(maps)):
+        # \\斜向，从左上角到右上角
+        for ix in range(len(maps[0])):
             y = ''
             for iy in range(len(maps)):
-                y = y + maps[iy][ix]
-            y0 = copy.deepcopy(y)
+                if ix + iy < len(maps[0]):
+                    y = y + maps[iy][ix + iy]
+
+            # 检查\\向，从上到下
+            for iy in range(len(y)):
+                for k in self.weights[player]:
+                    if y[iy:].startswith(k):
+                        if ix + iy < len(maps[0]):
+                            weights[iy - 1][ix + iy - 1] = weights[iy - 1][ix + iy - 1] + self.weights[player][k]
+
+            y = y[::-1]
+            # 检查竖向，从下到上
+            for iy in range(len(y)):
+                for k in self.weights[player]:
+                    if y[iy:].startswith(k):
+                        if ix + iy < len(maps[0]):
+                            weights[self.h - (iy - 0)][self.w - (ix + iy + 0)] = weights[self.h - (iy - 0)][self.w - (ix + iy + 0)] \
+                                                                            + self.weights[player][k]
+
+        # \\斜向，从左上角到左下角
+        for iy in range(len(maps)):
+            y = ''
+            for ix in range(len(maps[0])):
+                if ix + iy < len(maps[0]):
+                    y = y + maps[iy][ix + iy]
+
+            # 检查\\向，从上到下
             for ix in range(len(y)):
                 for k in self.weights[player]:
                     if y[ix:].startswith(k):
-                        weights[iy][ix] = self.weights[player][k]
+                        if ix + iy < len(maps[0]):
+                            weights[iy - 1][ix + iy - 1] = weights[iy - 1][ix + iy - 1] + self.weights[player][k]
+
+            # y = y[::-1]
+            # # 检查竖向，从下到上
+            # for iy in range(len(y)):
+            #     for k in self.weights[player]:
+            #         if y[iy:].startswith(k):
+            #             if ix + iy < len(maps[0]):
+            #                 weights[self.h - (iy - 0)][self.w - (ix + iy + 0)] = weights[self.h - (iy - 0)][
+            #                                                                          self.w - (ix + iy + 0)] \
+            #                                                                      + self.weights[player][k]
+
+        for w in weights:
+            print(w)
 
 
 # UI部分
@@ -223,7 +273,7 @@ class FaiUi:
 
 
 if __name__ == '__main__':
-    fai = FAI(10, 10)
+    fai = FAI(8, 8)
     # fai.put(0, 4, fai.P2)
     # fai.put(0, 5, fai.P1)
     # fai.put(0, 6, fai.P1)
@@ -236,12 +286,20 @@ if __name__ == '__main__':
     # fai.put(4, 0, fai.P2)
     # fai.put(5, 0, fai.P2)
 
-    fai.put(6, 1, fai.P1)
-    fai.put(5, 2, fai.P1)
-    fai.put(4, 3, fai.P1)
-    fai.put(3, 4, fai.P1)
-    fai.put(2, 5, fai.P1)
+    # fai.put(6, 1, fai.P1)
+    # fai.put(5, 2, fai.P1)
+    # fai.put(4, 3, fai.P1)
+    # fai.put(3, 4, fai.P1)
+    # fai.put(2, 5, fai.P1)
 
-    print(fai.play(fai.P1))
+    # fai.put(2, 2, fai.P1)
+    # fai.put(2, 3, fai.P1)
+    # fai.put(2, 4, fai.P1)
+    # fai.put(2, 5, fai.P1)
+    # fai.put(2, 6, fai.P1)
+
+    fai.put(0, 1, fai.P1)
+
+    fai.play(fai.P1)
     print(fai)
-    print(fai.win())
+    print("Player", fai.win(), 'is winner')
