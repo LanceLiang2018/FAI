@@ -1,5 +1,8 @@
 import random
 import copy
+from tkinter import *
+import tkinter.messagebox
+# ●○•
 
 
 # 算法部分
@@ -11,9 +14,9 @@ class FAI:
         self.P1 = 1
         self.P2 = 2
         self.BLANK = 0
-        self.CODE_P1 = '1'
-        self.CODE_P2 = '2'
-        self.CODE_BLANK = ' '
+        self.CODE_P1 = ' 1 '
+        self.CODE_P2 = ' 2 '
+        self.CODE_BLANK = '   '
         # self.CODE_P1 = '●'
         # self.CODE_P2 = '○'
         # self.CODE_BLANK = '.'
@@ -271,35 +274,66 @@ class FaiUi:
     def __init__(self, w: int, h: int):
         self.fai = FAI(w, h)
 
+        self.root = Tk()
+        self.frame = Frame(self.root).grid()
+
+        self.fai.put(1, 4, self.fai.P1)
+
+        self.map = [[None for i in range(w)] for i in range(h)]
+        self.func = [[None for i in range(w)] for i in range(h)]
+
+        for y in range(h):
+            for x in range(w):
+                self.func[y][x] = lambda: print('y:', self.func[copy.deepcopy(y)][x], 'x:', copy.deepcopy(y))
+
+        for y in range(h):
+            for x in range(w):
+                self.map[y][x] = Button(self.frame,
+                                        # command=lambda: self.clicked(tx, ty),
+                                        command=self.func[0][0],
+                                        text=self.fai.CODE[self.fai.map[y][x]])
+                self.map[y][x].grid(row=y, column=x)
+
+        pass
+
+    def clicked(self, x, y):
+        print('clicked:', x, ",", y)
+        print(self.func[y][x])
+
+
+# if __name__ == '__main__':
+#     fai = FAI(8, 8)
+#     # fai.put(0, 4, fai.P2)
+#     # fai.put(0, 5, fai.P1)
+#     # fai.put(0, 6, fai.P1)
+#     # fai.put(0, 7, fai.P1)
+#     # fai.put(0, 8, fai.P1)
+#     #
+#     # fai.put(1, 0, fai.P1)
+#     # fai.put(2, 0, fai.P2)
+#     # fai.put(3, 0, fai.P2)
+#     # fai.put(4, 0, fai.P2)
+#     # fai.put(5, 0, fai.P2)
+#
+#     # fai.put(6, 1, fai.P1)
+#     # fai.put(5, 2, fai.P1)
+#     # fai.put(4, 3, fai.P1)
+#     # fai.put(3, 4, fai.P1)
+#     # fai.put(2, 5, fai.P1)
+#
+#     # fai.put(2, 2, fai.P1)
+#     # fai.put(2, 3, fai.P1)
+#     # fai.put(2, 4, fai.P1)
+#     # fai.put(2, 5, fai.P1)
+#     # fai.put(2, 6, fai.P1)
+#
+#     fai.put(0, 1, fai.P1)
+#
+#     fai.play(fai.P1)
+#     print(fai)
+#     print("Player", fai.win(), 'is winner')
+
 
 if __name__ == '__main__':
-    fai = FAI(8, 8)
-    # fai.put(0, 4, fai.P2)
-    # fai.put(0, 5, fai.P1)
-    # fai.put(0, 6, fai.P1)
-    # fai.put(0, 7, fai.P1)
-    # fai.put(0, 8, fai.P1)
-    #
-    # fai.put(1, 0, fai.P1)
-    # fai.put(2, 0, fai.P2)
-    # fai.put(3, 0, fai.P2)
-    # fai.put(4, 0, fai.P2)
-    # fai.put(5, 0, fai.P2)
-
-    # fai.put(6, 1, fai.P1)
-    # fai.put(5, 2, fai.P1)
-    # fai.put(4, 3, fai.P1)
-    # fai.put(3, 4, fai.P1)
-    # fai.put(2, 5, fai.P1)
-
-    # fai.put(2, 2, fai.P1)
-    # fai.put(2, 3, fai.P1)
-    # fai.put(2, 4, fai.P1)
-    # fai.put(2, 5, fai.P1)
-    # fai.put(2, 6, fai.P1)
-
-    fai.put(0, 1, fai.P1)
-
-    fai.play(fai.P1)
-    print(fai)
-    print("Player", fai.win(), 'is winner')
+    ui = FaiUi(10, 10)
+    ui.root.mainloop()
