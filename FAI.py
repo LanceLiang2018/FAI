@@ -344,7 +344,7 @@ class FaiUi:
         self.frame_p1 = Frame(self.root)
         # self.button = Button(self.root, text='新开一局', command=lambda: (self.root.destroy(), init_ui()))
         self.message.set("新开一局")
-        self.button = Button(self.root, textvariable=self.message, command=lambda: self.init_data(w, h))
+        self.button = Button(self.root, textvariable=self.message, command=lambda: self.init_data(w, h), relief='groove')
         self.frame_p2 = Frame(self.root)
 
         Label(self.frame_p1, text="P1").grid(row=0, column=0)
@@ -377,7 +377,9 @@ class FaiUi:
                                         command=self.click[y][x].run,
                                         # text=self.fai.CODE[self.fai.map[y][x]])
                                         textvariable=self.vars[y][x],
-                                        font=self.song)
+                                        font=self.song,
+                                        relief='groove',
+                                        bd=1)
                 self.map[y][x].grid(row=y, column=x)
 
         self.frame_p1.grid(row=0, column=0)
@@ -421,7 +423,9 @@ class FaiUi:
                                         command=self.click[y][x].run,
                                         # text=self.fai.CODE[self.fai.map[y][x]])
                                         textvariable=self.vars[y][x],
-                                        font=self.song)
+                                        font=self.song,
+                                        relief='groove',
+                                        bd=1)
                 self.map[y][x].grid(row=y, column=x)
 
         if self.thread is not None:
