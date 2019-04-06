@@ -284,41 +284,6 @@ class FAI:
             print(w)
 
 
-# 点击的函数专门设置一个类（浪费内存行为）
-class FaiUiClick:
-    def __init__(self, fai, x=0, y=0, w=0, h=0):
-        self.x, self.y = x, y
-        self.w, self.h = w, h
-        self.fai = fai
-
-    def set_pos(self, x, y):
-        self.x, self.y = x, y
-
-    def run(self):
-        global ui
-        if ui.stopped is True:
-            return
-        print('clicked:', 'x:', self.x, 'y:', self.y, 'player:', ui.player)
-        res = self.fai.put(self.x, self.y, ui.player)
-        # self.fai.put(self.x, self.y, random.randint(0, 2))
-
-        if res:
-            if ui.player == 1:
-                ui.player = 2
-            elif ui.player == 2:
-                ui.player = 1
-
-        if ui.started is False:
-            ui.start()
-
-        ui_refresh()
-
-        win = self.fai.win()
-        if win != 0:
-            ui.message.set("P%d获胜" % win)
-            ui.stopped = True
-            ui.started = False
-
 # UI部分
 class FaiUi:
     def __init__(self, w: int, h: int):
@@ -363,7 +328,7 @@ class FaiUi:
 
         for y in range(h):
             for x in range(w):
-                self.click[y][x] = FaiUiClick(fai=self.fai, w=w, h=h, x=x, y=y)
+                self.click[y][x] = FaiUiClick(self, fai=self.fai, w=w, h=h, x=x, y=y)
 
         for y in range(self.h):
             for x in range(self.w):
@@ -411,7 +376,7 @@ class FaiUi:
 
         for y in range(h):
             for x in range(w):
-                self.click[y][x] = FaiUiClick(fai=self.fai, w=w, h=h, x=x, y=y)
+                self.click[y][x] = FaiUiClick(self, fai=self.fai, w=w, h=h, x=x, y=y)
 
         for y in range(self.h):
             for x in range(self.w):
@@ -469,6 +434,21 @@ class FaiUi:
         self.thread.setDaemon(True)
         self.thread.start()
 
+    def refresh(self):
+        for y in range(self.h):
+            for x in range(self.w):
+                self.vars[y][x].set(self.fai.get_char(x=x, y=y))
+
+        m, s = divmod(self.time_p1, 60)
+        self.var_p1.set("%02d:%02d" % (m, s))
+        m, s = divmod(self.time_p2, 60)
+        self.var_p2.set("%02d:%02d" % (m, s))
+
+        if self.player == 1:
+            self.var_p1.set(self.var_p1.get() + " 执棋")
+        if ui.player == 2:
+            self.var_p2.set(self.var_p2.get() + " 执棋")
+
 # if __name__ == '__main__':
 #     fai = FAI(8, 8)
 #     # fai.put(0, 4, fai.P2)
@@ -501,22 +481,59 @@ class FaiUi:
 #     print(fai)
 #     print("Player", fai.win(), 'is winner')
 
+# 点击的函数专门设置一个类（浪费内存行为）
+class FaiUiClick:
+    def __init__(self, _ui: FaiUi, fai, x=0, y=0, w=0, h=0):
+        self.ui = _ui
+        self.x, self.y = x, y
+        self.w, self.h = w, h
+        self.fai = fai
 
-def ui_refresh():
-    global ui
-    for y in range(ui.h):
-        for x in range(ui.w):
-            ui.vars[y][x].set(ui.fai.get_char(x=x, y=y))
+    def set_pos(self, x, y):
+        self.x, self.y = x, y
 
-    m, s = divmod(ui.time_p1, 60)
-    ui.var_p1.set("%02d:%02d" % (m, s))
-    m, s = divmod(ui.time_p2, 60)
-    ui.var_p2.set("%02d:%02d" % (m, s))
+    def run(self):
+        if self.ui.stopped is True:
+            return
+        print('clicked:', 'x:', self.x, 'y:', self.y, 'player:', ui.player)
+        res = self.fai.put(self.x, self.y, self.ui.player)
+        # self.fai.put(self.x, self.y, random.randint(0, 2))
 
-    if ui.player == 1:
-        ui.var_p1.set(ui.var_p1.get() + " 执棋")
-    if ui.player == 2:
-        ui.var_p2.set(ui.var_p2.get() + " 执棋")
+        if res:
+            if self.ui.player == 1:
+                self.ui.player = 2
+            elif self.ui.player == 2:
+                self.ui.player = 1
+
+        if self.ui.started is False:
+            self.ui.start()
+
+        self.ui.refresh()
+
+        win = self.fai.win()
+        if win != 0:
+            self.ui.message.set("P%d获胜" % win)
+            self.ui.stopped = True
+            self.ui.started = False
+
+#
+# def ui_refresh():
+#     global ui
+#     for y in range(ui.h):
+#         for x in range(ui.w):
+#             ui.vars[y][x].set(ui.fai.get_char(x=x, y=y))
+#
+#     m, s = divmod(ui.time_p1, 60)
+#     ui.var_p1.set("%02d:%02d" % (m, s))
+#     m, s = divmod(ui.time_p2, 60)
+#     ui.var_p2.set("%02d:%02d" % (m, s))
+#
+#     if ui.player == 1:
+#         ui.var_p1.set(ui.var_p1.get() + " 执棋")
+#     if ui.player == 2:
+#         ui.var_p2.set(ui.var_p2.get() + " 执棋")
+
+
 
 
 def init_ui():
