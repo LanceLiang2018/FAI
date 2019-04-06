@@ -5,6 +5,8 @@ import tkinter.messagebox
 import tkinter.font as tkFont
 import threading
 import time
+import requests
+import json
 # ●○•
 
 
@@ -101,9 +103,9 @@ class FAI:
                 if y[i] == player:
                     check = y[i:i + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         # 检查列
@@ -118,9 +120,9 @@ class FAI:
                 if x[j] == player:
                     check = x[j:j + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         # 检查"\\"列，从左上角开始
@@ -136,9 +138,9 @@ class FAI:
                 if x[j] == player:
                     check = x[j:j + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         # 检查"\\"列，从左上角开始（到左下角）
@@ -154,9 +156,9 @@ class FAI:
                 if x[j] == player:
                     check = x[j:j + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         # 检查"//"列，从左上角开始
@@ -172,9 +174,9 @@ class FAI:
                 if x[j] == player:
                     check = x[j:j + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         # 检查"//"列，从左上角开始（到左下角）
@@ -190,9 +192,9 @@ class FAI:
                 if x[j] == player:
                     check = x[j:j + 5]
                     if self.BLANK not in check:
-                        if player == self.P1 and self.P2 not in check:
+                        if player == self.P1 and self.P2 not in check and len(check) == 5:
                             return True
-                        if player == self.P2 and self.P1 not in check:
+                        if player == self.P2 and self.P1 not in check and len(check) == 5:
                             return True
 
         return False
@@ -284,14 +286,57 @@ class FAI:
             print(w)
 
 
+class FAINetwork:
+    def __init__(self):
+        self.API_MAIN = 'https://lance-go-online.herokuapp.com/'
+        self.API1 = 'https://lance-go-online.herokuapp.com/play/'
+        self.API2 = 'https://lance-go-online.herokuapp.com/playing/'
+
+    def wakeup(self):
+        r = requests.get(self.API_MAIN)
+        if r.status_code != 200:
+            return False
+        return True
+
+    def get_data(self, code: str):
+        r = requests.get(self.API2 + code)
+        if r.status_code != 200:
+            return ''
+        return r.text
+
+    def get_result(self, code: str):
+        r = requests.get(self.API2 + code)
+        if r.status_code != 200:
+            return {"code": code, "data": "", "error": "Server Error", "status": 0, "uptime": 0, "winner": 0}
+        try:
+            js = json.loads(r.text)
+        except json.decoder.JSONDecodeError:
+            return {"code": code, "data": "", "error": "Server Error", "status": 0, "uptime": 0, "winner": 0}
+        return js
+
+    def post_result(self, code: str, player: int, action: str = 'put', winner: int = 0, size: str = None):
+        params = {'action': action, 'player': player, 'winner': winner}
+        if size is not None:
+            params['size'] = size
+        r = requests.post(self.API1 + code, data=params)
+        if r.status_code != 200:
+            return {'code': -1, 'message': "Server Error."}
+        try:
+            js = json.loads(r.text)
+        except json.decoder.JSONDecodeError:
+            return {"code": code, "data": "", "error": "Server Error", "status": 0, "uptime": 0, "winner": 0}
+        return js
+
+
 # UI部分
 class FaiUi:
-    def __init__(self, w: int, h: int):
+    def __init__(self, _root, w: int, h: int):
         self.fai = FAI(w, h)
+        self.net = FAINetwork()
 
-        self.root = Tk()
+        self.root = _root
         self.root.resizable(width=False, height=False)
-        # self.root.attributes("-toolwindow", 1)
+        self.root.attributes('-alpha', 0.9)
         self.root.title("FAI - 在线五子棋对战程序")
 
         self.w, self.h = w, h
@@ -446,7 +491,7 @@ class FaiUi:
 
         if self.player == 1:
             self.var_p1.set(self.var_p1.get() + " 执棋")
-        if ui.player == 2:
+        if self.player == 2:
             self.var_p2.set(self.var_p2.get() + " 执棋")
 
 # if __name__ == '__main__':
@@ -495,7 +540,7 @@ class FaiUiClick:
     def run(self):
         if self.ui.stopped is True:
             return
-        print('clicked:', 'x:', self.x, 'y:', self.y, 'player:', ui.player)
+        print('clicked:', 'x:', self.x, 'y:', self.y, 'player:', self.ui.player)
         res = self.fai.put(self.x, self.y, self.ui.player)
         # self.fai.put(self.x, self.y, random.randint(0, 2))
 
@@ -534,14 +579,77 @@ class FaiUiClick:
 #         ui.var_p2.set(ui.var_p2.get() + " 执棋")
 
 
+# def init_ui(w, h):
+#     global ui
+#     ui = FaiUi(Tk(), w, h)
 
 
-def init_ui():
-    global ui
-    ui = FaiUi(15, 15)
-    ui.root.attributes('-alpha', 0.9)
+class FAIConfig:
+    def __init__(self, _root):
+        self.root = _root
+        self.root.resizable(width=False, height=False)
+        self.frame = Frame(self.root)
+
+        Label(self.frame, text="房间").grid(row=0, column=0)
+        self.code = Entry(self.frame)
+        self.code.grid(row=0, column=1, sticky=W+E)
+
+        self.frame_wh = LabelFrame(self.frame, text='新房间')
+
+        self.w = Entry(self.frame_wh, width=8)
+        self.h = Entry(self.frame_wh, width=8)
+        self.w.insert(0, "15")
+        self.h.insert(0, "15")
+        self.w.configure(state=DISABLED)
+        self.h.configure(state=DISABLED)
+        Label(self.frame_wh, text="宽度").grid(row=2, column=0)
+        Label(self.frame_wh, text="高度").grid(row=2, column=2)
+        self.w.grid(row=2, column=1)
+        self.h.grid(row=2, column=3)
+
+        self.frame_wh.grid(row=1, columnspan=3, sticky=W+E)
+
+        self.var_check = BooleanVar()
+        self.var_player = IntVar()
+        self.var_player.set(1)
+
+        Checkbutton(self.frame, text="建立新房间", variable=self.var_check,
+                    command=self.check_fun)\
+            .grid(row=2, columnspan=3)
+
+        self.frame_player = LabelFrame(self.frame, text='玩家')
+        Radiobutton(self.frame_player, value=1, variable=self.var_player, text='P1').grid(row=0, column=0)
+        Radiobutton(self.frame_player, value=2, variable=self.var_player, text='P2').grid(row=0, column=1)
+        Radiobutton(self.frame_player, value=0, variable=self.var_player, text='围观').grid(row=0, column=2)
+        self.frame_player.grid(row=3, columnspan=3, sticky=W+E)
+
+        Button(self.frame, text='开始', command=self.done)\
+            .grid(row=40, columnspan=2, sticky=W + E)
+        self.frame.grid()
+
+        self.ui = None
+
+    def check_fun(self):
+        if self.var_check.get() is True:
+            self.w.configure(state=NORMAL)
+            self.h.configure(state=NORMAL)
+        else:
+            self.w.configure(state=DISABLED)
+            self.h.configure(state=DISABLED)
+
+    def done(self):
+        print('done', self.var_check.get(), self.var_player.get(), self.w.get(), self.h.get())
+        if self.code.get() == '':
+            tkinter.messagebox.showerror("房间错误", "房间名为空")
+            return
+        w, h = int(self.w.get()), int(self.h.get())
+        self.frame.destroy()
+        self.ui = FaiUi(self.root, w, h)
+        self.ui.root.mainloop()
 
 
 if __name__ == '__main__':
-    init_ui()
-    ui.root.mainloop()
+    # init_ui(12, 12)
+    # ui.root.mainloop()
+    config = FAIConfig(Tk())
+    config.root.mainloop()
