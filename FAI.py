@@ -292,8 +292,11 @@ class FAINetwork:
         self.API1 = 'https://lance-go-online.herokuapp.com/play/'
         self.API2 = 'https://lance-go-online.herokuapp.com/playing/'
 
-    def wakeup(self):
-        r = requests.get(self.API_MAIN)
+    def wakeup(self, timeout: float = 30):
+        try:
+            r = requests.get(self.API_MAIN, timeout=timeout)
+        except requests.exceptions.ConnectTimeout:
+            return False
         if r.status_code != 200:
             return False
         return True
@@ -526,6 +529,7 @@ class FaiUi:
 #     print(fai)
 #     print("Player", fai.win(), 'is winner')
 
+
 # 点击的函数专门设置一个类（浪费内存行为）
 class FaiUiClick:
     def __init__(self, _ui: FaiUi, fai, x=0, y=0, w=0, h=0):
@@ -623,11 +627,15 @@ class FAIConfig:
         Radiobutton(self.frame_player, value=0, variable=self.var_player, text='围观').grid(row=0, column=2)
         self.frame_player.grid(row=3, columnspan=3, sticky=W+E)
 
-        Button(self.frame, text='开始', command=self.done)\
+        self.var_message = StringVar()
+        self.var_message.set('开始')
+
+        Button(self.frame, textvariable=self.var_message, command=self.done)\
             .grid(row=40, columnspan=2, sticky=W + E)
         self.frame.grid()
 
         self.ui = None
+        self.waiting = False
 
     def check_fun(self):
         if self.var_check.get() is True:
@@ -637,15 +645,33 @@ class FAIConfig:
             self.w.configure(state=DISABLED)
             self.h.configure(state=DISABLED)
 
+    def run_thread(self):
+        net = FAINetwork()
+        self.var_message.set('等待服务器响应...')
+        res = net.wakeup(timeout=30)
+        if res is False:
+            self.var_message.set("网络错误/服务器响应错误")
+            tkinter.messagebox.showerror("网络错误", "服务器响应错误")
+            return
+        self.var_message.set('服务器响应...OK')
+        w, h = int(self.w.get()), int(self.h.get())
+        self.frame.destroy()
+        self.ui = FaiUi(self.root, w, h)
+        # 不需要mainloop
+        # self.ui.root.mainloop()
+        self.waiting = False
+
     def done(self):
+        if self.waiting is True:
+            return
         print('done', self.var_check.get(), self.var_player.get(), self.w.get(), self.h.get())
         if self.code.get() == '':
             tkinter.messagebox.showerror("房间错误", "房间名为空")
             return
-        w, h = int(self.w.get()), int(self.h.get())
-        self.frame.destroy()
-        self.ui = FaiUi(self.root, w, h)
-        self.ui.root.mainloop()
+
+        self.waiting = True
+        t = threading.Thread(target=self.run_thread)
+        t.start()
 
 
 if __name__ == '__main__':
